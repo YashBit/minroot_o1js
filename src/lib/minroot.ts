@@ -1,53 +1,53 @@
-import { Field } from 'o1js';
+import { Field, Group } from 'o1js';
 
-// Modular Exponentiation
-
-function fieldModPow(base: Field, exponent: bigint): Field {
-  let result = Field(1);
-  let currentBase = base;
-  let exp = exponent;
-
-  while (exp > 0n) {
-    if (exp % 2n === 1n) {
-      result = result.mul(currentBase);
-    }
-    currentBase = currentBase.mul(currentBase);
-    exp = exp / 2n;
-  }
-  return result;
+function mod(x: Group, p: Field): Group {
+  // For elliptic curve groups, mod isn't needed as operations are already in the field
+  return x;
 }
 
-// Fifth Root Exponent
+function power(a: Group, n: Field, p: Field): Group {
+  return a.scale(n);
+}
 
-function calculateFifthRootExponent(): bigint {
+function fieldModPow(base: Group, exponent: Field): Group {
+  return base.scale(exponent);
+}
+
+function calculateFifthRootExponent(): Field {
   const p = Field.ORDER;
-  const five = 5n;
-  const two = 2n;
-  const three = 3n;
-  const five_inv = fieldModPow(Field(five), p - two).toBigInt();
-  const exp = (five_inv * (p - three)) % p;
-  return exp;
+  const five = Field(5);
+  const two = Field(2);
+  const three = Field(3);
+  const fiveGroup = Group.generator.scale(five);
+  const pMinusTwo = Field(p - 2n);
+  const pMinusThree = Field(p - 3n);
+  const fiveInv = fiveGroup.scale(pMinusTwo);
+  return Field(fiveInv.x).mul(pMinusThree);
 }
 
-// Min Root Single
-
-function minRootIteration(x: Field, y: Field): [Field, Field] {
-  const fithRootExponent = calculateFifthRootExponent();
-  const sum = x.add(y);
-  const x_next = fieldModPow(sum, fithRootExponent);
-  const y_next = x;
-  return [x_next, y_next];
+function minRootIteration(x: Group, y: Group): [Group, Group] {
+  const fifthRootExponent = calculateFifthRootExponent();
+  const sum = x.add(y); // Using Group's add method
+  const xNext = fieldModPow(sum, fifthRootExponent);
+  const yNext = x;
+  return [xNext, yNext];
 }
 
-function minRoot(numIterations: number, x0: Field, y0: Field): [Field, Field] {
+function minRoot(numIterations: number, x0: Group, y0: Group): [Group, Group] {
   let x = x0;
   let y = y0;
-
   for (let i = 0; i < numIterations; i++) {
     [x, y] = minRootIteration(x, y);
   }
-
   return [x, y];
 }
 
-export { minRoot, minRootIteration, fieldModPow, calculateFifthRootExponent };
+// Helper function to create a Group from a Field
+function createGroup(field: Field): Group {
+  return new Group({
+    x: field,
+    y: Group.generator.y 
+  });
+}
+
+export { minRoot, minRootIteration, fieldModPow, calculateFifthRootExponent, createGroup };
