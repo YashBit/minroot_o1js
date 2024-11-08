@@ -1,31 +1,31 @@
 import {
   ZkProgram,
   Field,
+  Group,
   Proof,
   Struct
 } from 'o1js';
-
 import {
   minRoot,
   minRootIteration,
   fieldModPow,
   calculateFifthRootExponent,
+  createGroup
 } from './lib/minroot';
 
 class MinRootState extends Struct({
-  x: Field,
-  y: Field,
+  x: Group,
+  y: Group,
 }) {}
 
 const MinRootProgram = ZkProgram({
   name: 'minroot',
-  publicInput: Field,
+  publicInput: Group,
   publicOutput: MinRootState,
-
   methods: {
     init: {
-      privateInputs: [Field],
-      async method(publicInput: Field, y0: Field) {
+      privateInputs: [Group],
+      async method(publicInput: Group, y0: Group) {
         return {
           publicOutput: new MinRootState({
             x: publicInput,
@@ -34,12 +34,10 @@ const MinRootProgram = ZkProgram({
         };
       },
     },
-
     step: {
       privateInputs: [],
-      async method(publicInput: Field) {
+      async method(publicInput: Group) {
         const [nextX, nextY] = minRootIteration(publicInput, publicInput);
-        
         return {
           publicOutput: new MinRootState({
             x: nextX,

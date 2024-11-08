@@ -27,7 +27,7 @@ function calculateFifthRootExponent(): Field {
 
 function minRootIteration(x: Group, y: Group): [Group, Group] {
   const fifthRootExponent = calculateFifthRootExponent();
-  const sum = x.add(y); // Using Group's add method
+  const sum = x.add(y); 
   const xNext = fieldModPow(sum, fifthRootExponent);
   const yNext = x;
   return [xNext, yNext];
