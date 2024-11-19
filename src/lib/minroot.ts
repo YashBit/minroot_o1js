@@ -1,46 +1,53 @@
-/**
- * Performs modular exponentiation (base^exponent mod modulus)
- */
-function modPow(base: bigint, exponent: bigint, modulus: bigint): bigint {
-  if (modulus === 1n) return 0n;
-  let result = 1n;
-  base = base % modulus;
-  while (exponent > 0n) {
-    if (exponent % 2n === 1n) {
-      result = (result * base) % modulus;
-    }
-    base = (base * base) % modulus;
-    exponent = exponent / 2n;
+import { Field, Group } from 'o1js';
+
+function mod(x: Group, p: Field): Group {
+  // For elliptic curve groups, mod isn't needed as operations are already in the field
+  return x;
+}
+
+function power(a: Group, n: Field, p: Field): Group {
+  return a.scale(n);
+}
+
+function fieldModPow(base: Group, exponent: Field): Group {
+  return base.scale(exponent);
+}
+
+function calculateFifthRootExponent(): Field {
+  const p = Field.ORDER;
+  const five = Field(5);
+  const two = Field(2);
+  const three = Field(3);
+  const fiveGroup = Group.generator.scale(five);
+  const pMinusTwo = Field(p - 2n);
+  const pMinusThree = Field(p - 3n);
+  const fiveInv = fiveGroup.scale(pMinusTwo);
+  return Field(fiveInv.x).mul(pMinusThree);
+}
+
+function minRootIteration(x: Group, y: Group): [Group, Group] {
+  const fifthRootExponent = calculateFifthRootExponent();
+  const sum = x.add(y); 
+  const xNext = fieldModPow(sum, fifthRootExponent);
+  const yNext = x;
+  return [xNext, yNext];
+}
+
+function minRoot(numIterations: number, x0: Group, y0: Group): [Group, Group] {
+  let x = x0;
+  let y = y0;
+  for (let i = 0; i < numIterations; i++) {
+    [x, y] = minRootIteration(x, y);
   }
-  return result;
+  return [x, y];
 }
 
-/**
- * Calculates the expression equivalent to Rust's:
- * let five_inv = five.modpow(&(&p - &two), &p);
- * (&five_inv * (&p - &three)) % &p
- */
-
-function calculateExpression(p: bigint): bigint {
-  const two = 2n;
-  const three = 3n;
-  const five = 5n;
-
-  // Calculate five_inv = 5^(p-2) mod p
-  const five_inv = modPow(five, p - two, p);
-
-  // Calculate final expression: (five_inv * (p - three)) % p
-  const result = (five_inv * (p - three)) % p;
-
-  return result;
+// Helper function to create a Group from a Field
+function createGroup(field: Field): Group {
+  return new Group({
+    x: field,
+    y: Group.generator.y 
+  });
 }
 
-// Example usage:
-const p = BigInt(
-  '21888242871839275222246405745257275088548364400416034343698204186575808495617'
-);
-const result = calculateExpression(p);
-console.log(result.toString());
-
-// Export for module usage
-export { modPow, calculateExpression };
+export { minRoot, minRootIteration, fieldModPow, calculateFifthRootExponent, createGroup };

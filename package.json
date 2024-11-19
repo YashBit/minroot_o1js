@@ -1,13 +1,13 @@
 {
-    "name": "pasta_curves_vdf",
-    "version": "1.0.0",
-    "dependencies": {
-        "zkapp-cli": "^0.22.0"
-    },
-    "devDependencies": {
-        "prettier": "^3.3.3"
-    },
-    "scripts": {
-        "format": "prettier --write '**/*.ts'"
-    }
+  "name": "minroot_o1js",
+  "version": "1.0.0",
+  "dependencies": {
+    "zkapp-cli": "^0.22.0"
+  },
+  "devDependencies": {
+    "prettier": "^3.3.3"
+  },
+  "scripts": {
+    "format": "prettier --write '**/*.ts'"
+  }
 }
